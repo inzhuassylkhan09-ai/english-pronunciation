@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Test</title>
+</head>
+<body>
+  <h1>🎤 Проверка записи голоса</h1>
+  <button id="recordBtn">Записать голос</button>
+  <p id="status">Нажми кнопку, чтобы начать запись.</p>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+
+    const recordBtn = document.getElementById("recordBtn");
+    const status = document.getElementById("status");
+
+    recordBtn.addEventListener("click", async () => {
+      if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        // Запрос доступа к микрофону
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = e => {
+          audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          const audioUrl = URL.createObjectURL(audioBlob);
+          const audio = new Audio(audioUrl);
+          audio.controls = true;
+          document.body.appendChild(audio);
+          audioChunks = [];
+        };
+
+        mediaRecorder.start();
+        status.textContent = "⏺ Запись идёт... нажми ещё раз, чтобы остановить.";
+      } else {
+        mediaRecorder.stop();
+        status.textContent = "✅ Запись завершена.";
+      }
+    });
+  </script>
+</body>
+</html>
